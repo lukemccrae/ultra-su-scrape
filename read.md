@@ -1,7 +1,7 @@
-to run:
 
-# git pull
+### Usage
 
-# yarn
+To run:
 
-# sh run.sh
+```sh
+yarn && sh run.sh
