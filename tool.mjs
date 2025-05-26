@@ -54,12 +54,20 @@ async function fetchRaceByDid(did) {
       return null;
     }
 
-    // Collect desired data
-    const title = $("title").text().trim();
-    const banner = $('#ContentPlaceHolder1_EventInfoThin1_imgEventBanner').attr('src') || null;
-    const website = $('#ContentPlaceHolder1_EventInfoThin1_hlWebsite').attr('href') || null;
+    // Collect desired data according to instructions.txt
 
-    // Start times
+    // Name
+    const name = $('h1.event-title').text().trim();
+
+    // Location (text content of .address_link)
+    const location = $('a.address_link').text().trim();
+
+    // Date (already got as dateStr)
+
+    // Event banner
+    const banner = $('#ContentPlaceHolder1_EventInfoThin1_imgEventBanner').attr('src') || null;
+
+    // Event start times
     const startTimes = [];
     $('.widget-wrap ul.link-list li').each((i, el) => {
       const name = $(el).find('.times_name').text().trim();
@@ -67,7 +75,20 @@ async function fetchRaceByDid(did) {
       if (name && time) startTimes.push({ name, time });
     });
 
-    // Events
+    // Website link
+    const website = $('#ContentPlaceHolder1_EventInfoThin1_hlWebsite').attr('href') || null;
+
+    // Carousel images
+    const images = [];
+    $('ul#lightSlider li').each((i, el) => {
+      const src = $(el).attr('data-src');
+      if (src) images.push(src);
+    });
+
+    // Link to ultrasignup (the page url)
+    const ultrasignup_url = url;
+
+    // Events (distances/costs)
     const events = [];
     $(".SmallButton").each((index, element) => {
       const buttonPriceContent = $(element).text();
@@ -76,15 +97,18 @@ async function fetchRaceByDid(did) {
       events.push({ distance, cost: stripWhiteSpace.replace(/ Registration /gi, '').trim() });
     });
 
+    // Compose result
     const result = {
       did,
-      ultrasignup_url: url,
-      title,
+      name,
+      location,
       date: dateStr,
       banner,
       website,
       startTimes,
-      events
+      events,
+      images,
+      ultrasignup_url
     };
 
     await browser.close();
@@ -120,7 +144,7 @@ async function scrapeAllFutureRaces() {
     const race = await fetchRaceByDid(did);
     if (race) {
       await appendRaceToFile(race);
-      console.log(`Added: ${race.title} (${race.date})`);
+      console.log(`Added: ${race.name} (${race.date})`);
       misses = 0;
     } else {
       misses += 1;
