@@ -1,68 +1,135 @@
 import cheerio from "cheerio";
 import puppeteer from 'puppeteer';
+import fs from 'fs/promises';
 
-const miniSet = {
-  "29": "Crown King Scramble",
-  "99": "Calico Trail Run",
-  "104": "Bigfoot Snowshoe Festival",
-  "111": "Pemberton Trail",
-  "119": "Moab Red Hot Ultra",
-};
+const START_DID = 127118;
+const MIN_DID = 120000; // set a reasonable lower bound for efficiency
+const OUTPUT_FILE = "racelist.json";
 
-// Array of eid values
-const eidValues = [29, 99];
+// Helper to sleep between requests
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-async function fetchPageData(eid) {
+// Helper to parse date from string (e.g., "Saturday, Jun 7, 2025")
+function parseEventDate(str) {
+  if (!str) return null;
+  // Remove weekday
+  let dateStr = str.replace(/^[A-Za-z]+,\s*/, '');
+  // Parse with Date
+  let d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  return d;
+}
+
+async function fetchRaceByDid(did) {
+  const url = `https://ultrasignup.com/register.aspx?did=${did}`;
+  const browser = await puppeteer.launch({headless: "new"});
+  const page = await browser.newPage();
   try {
-    const browser = await puppeteer.launch({headless: "new"});
-    const page = await browser.newPage();
-
-    const url = `https://ultrasignup.com/register.aspx?eid=${eid}`
-    console.log(url)
-
-    await page.goto(url);
-
-    // this was waiting for 30 seconds causting timeout
-    // await page.waitForNavigation();
-
-    // click on register button opening modal
-    await page.click('#ContentPlaceHolder1_EventInfoThin1_btnRegister');
-
+    await page.goto(url, {waitUntil: 'domcontentloaded', timeout: 20000});
     const html = await page.content();
-
     const $ = cheerio.load(html);
 
-    // Perform functions on the retrieved HTML
-    const title = $("title").text();
+    // If there's no date, it's not a valid event page
+    const dateStr = $('#lblDate').text().trim();
+    if (!dateStr) {
+      await browser.close();
+      return null;
+    }
 
-    const events = []
+    const eventDate = parseEventDate(dateStr);
+    if (!eventDate) {
+      await browser.close();
+      return null;
+    }
 
-    // for every event in the modal push info to events array
-    $(".SmallButton").each((index, element) => {
-      const buttonPriceContent = $(element).text();
-      const stripWhiteSpace = buttonPriceContent.replace(/\s{2,}/g, " ")
-      const distance = stripWhiteSpace.split('-')[0]
-      events.push({ distance: distance, cost: stripWhiteSpace.replace(/ Registration /gi, '') })
+    // Now, get today's date (UTC, no time)
+    const today = new Date();
+    today.setHours(0,0,0,0);
 
+    // Only return if event is in the future
+    if (eventDate < today) {
+      await browser.close();
+      return null;
+    }
+
+    // Collect desired data
+    const title = $("title").text().trim();
+    const banner = $('#ContentPlaceHolder1_EventInfoThin1_imgEventBanner').attr('src') || null;
+    const website = $('#ContentPlaceHolder1_EventInfoThin1_hlWebsite').attr('href') || null;
+
+    // Start times
+    const startTimes = [];
+    $('.widget-wrap ul.link-list li').each((i, el) => {
+      const name = $(el).find('.times_name').text().trim();
+      const time = $(el).find('.times_time').text().trim();
+      if (name && time) startTimes.push({ name, time });
     });
 
-    return { eid, title, events };
+    // Events
+    const events = [];
+    $(".SmallButton").each((index, element) => {
+      const buttonPriceContent = $(element).text();
+      const stripWhiteSpace = buttonPriceContent.replace(/\s{2,}/g, " ");
+      const distance = stripWhiteSpace.split('-')[0].trim();
+      events.push({ distance, cost: stripWhiteSpace.replace(/ Registration /gi, '').trim() });
+    });
+
+    const result = {
+      did,
+      ultrasignup_url: url,
+      title,
+      date: dateStr,
+      banner,
+      website,
+      startTimes,
+      events
+    };
+
+    await browser.close();
+    return result;
   } catch (error) {
-    console.error(`Error fetching data for eid ${eid}:`, error.message);
-    return { eid, error: error.message };
+    await browser.close();
+    // If the page 404s or is otherwise unavailable, that's fine.
+    return null;
   }
 }
 
-// Process all eid values
-async function scrapePages() {
-  const results = [];
-  for (const eid of eidValues) {
-    const data = await fetchPageData(eid);
-    results.push(data);
+async function appendRaceToFile(race) {
+  // Read existing file or start with empty array
+  let races = [];
+  try {
+    const data = await fs.readFile(OUTPUT_FILE, 'utf-8');
+    races = JSON.parse(data);
+    if (!Array.isArray(races)) races = [];
+  } catch (e) {
+    // file does not exist, will create new
+    races = [];
   }
-  // Process or log the collected results here
-  console.log("Results:", JSON.stringify(results, null, 2));
+  races.push(race);
+  await fs.writeFile(OUTPUT_FILE, JSON.stringify(races, null, 2));
 }
 
-// Initiate the scraping process
-scrapePages();
+async function scrapeAllFutureRaces() {
+  let did = START_DID;
+  let misses = 0;
+
+  while (did >= MIN_DID && misses < 50) { // Stop after 50 consecutive misses (for efficiency)
+    console.log(`Checking DID ${did}`);
+    const race = await fetchRaceByDid(did);
+    if (race) {
+      await appendRaceToFile(race);
+      console.log(`Added: ${race.title} (${race.date})`);
+      misses = 0;
+    } else {
+      misses += 1;
+    }
+    did -= 1;
+    await sleep(1000); // polite delay
+  }
+
+  console.log(`Done. Scraped up to DID ${did + 1}`);
+}
+
+scrapeAllFutureRaces();
