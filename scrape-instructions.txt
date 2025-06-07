@@ -1,0 +1,74 @@
+these are elements in an ultrasignup event page
+
+this is the name
+<h1 class="event-title">Childish Nonsense</h1>
+
+this is the location (the text content, not the google maps link)
+<a href="https://maps.google.com/?q=39.2695003,-121.0180745&amp;ll=-121.0180745,-121.0180745&amp;z=7&amp;basemap=terrain" target="_blank" class="address_link">631 Coyote St, Nevada City, CA 95959</a>
+
+
+this is the date
+<span id="lblDate" class="event-date">Saturday, Jun 7, 2025</span>
+
+this is the event banner
+<img id="ContentPlaceHolder1_EventInfoThin1_imgEventBanner" class="event_banner" src="https://s3.amazonaws.com/img.ultrasignup.com/event/banner/cf2e032e-b63f-4662-bd58-96414a22aa4a.jpg" style="width:100%;">
+
+this is event start time
+<div class="widget-wrap">
+            <ul class="link-list">
+                 <li><span class="tsimes_name">Backyard</span><span class="times_time">8:00 AM</span></li>
+            
+                 <li><span class="times_name">Citizen 4 Miler</span><span class="times_time">8:15 AM</span></li>
+            </ul>
+            </div>
+
+this is websitre link
+<a href="https://www.brokenbrainbackyard.com/" id="ContentPlaceHolder1_EventInfoThin1_hlWebsite" class="websiteitem"><i class="fa fa-fw fa-globe"></i> Website</a>
+
+this is a carousel of images, give me an array of the image links
+<ul id="lightSlider" style="width: 1024.97px; height: 100px; padding-bottom: 0%; transform: translate3d(0px, 0px, 0px);" class="lightSlider lsGrab lSSlide">
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/7a7fbf29-fcb3-4df6-b8d4-8618fc47b92a.jpg" class="lslide active" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/7a7fbf29-fcb3-4df6-b8d4-8618fc47b92a_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/1d0086d3-3fde-4748-88a9-9235035e4a47.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/1d0086d3-3fde-4748-88a9-9235035e4a47_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/690a9767-5142-43e7-95af-7b3dfa731d5d.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/690a9767-5142-43e7-95af-7b3dfa731d5d_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/104e43d5-ce9e-4f9b-bb36-2ca75ed65bf3.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/104e43d5-ce9e-4f9b-bb36-2ca75ed65bf3_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/2b8b00ae-4e4c-41e9-8d8b-a3bfd369d41d.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/2b8b00ae-4e4c-41e9-8d8b-a3bfd369d41d_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/8389bf1e-7391-4d6a-9b49-01e7da3c2d10.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/8389bf1e-7391-4d6a-9b49-01e7da3c2d10_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/67bd5a7d-0fcd-474e-b913-ab8b442302b8.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/67bd5a7d-0fcd-474e-b913-ab8b442302b8_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/4707d62f-6c6a-4438-aa07-c02f06a3dbaa.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/4707d62f-6c6a-4438-aa07-c02f06a3dbaa_5.jpg" alt="">
+                                        </li>
+                                    
+                                        <li data-src="https://s3.amazonaws.com/img.ultrasignup.com/events/raw/faa6c93b-afe4-427c-8a2e-d9ec3f69e90c.jpg" class="lslide" style="width: 103.886px; margin-right: 10px;">
+                                            <img src="https://s3.amazonaws.com/img.ultrasignup.com/faa6c93b-afe4-427c-8a2e-d9ec3f69e90c_5.jpg" alt="">
+                                        </li>
+                                    
+                                        </ul>
+
+i also need to store the link to the ultra signup 
+
+help me adjust my scraper to store all these things in the racelist.json
+
+write to the json after each scrape, to reduce memory load
+

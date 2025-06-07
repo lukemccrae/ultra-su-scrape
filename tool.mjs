@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
 
 const START_DID = 127118;
-const MIN_DID = 120000; // set a reasonable lower bound for efficiency
+const MIN_DID = 110000; // set a reasonable lower bound for efficiency
 const OUTPUT_FILE = "racelist.json";
 
 // Helper to sleep between requests
@@ -11,15 +11,19 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Helper to parse date from string (e.g., "Saturday, Jun 7, 2025")
-function parseEventDate(str) {
-  if (!str) return null;
-  // Remove weekday
-  let dateStr = str.replace(/^[A-Za-z]+,\s*/, '');
-  // Parse with Date
-  let d = new Date(dateStr);
-  if (isNaN(d)) return null;
-  return d;
+// Helper to extract lat/lng from the Google Maps href
+function extractLatLngFromHref(href) {
+  try {
+    const url = new URL(href);
+    const q = url.searchParams.get('q');
+    if (q) {
+      const [lat, lng] = q.split(',').map(s => parseFloat(s.trim()));
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng };
+      }
+    }
+  } catch (e) {}
+  return { lat: null, lng: null };
 }
 
 async function fetchRaceByDid(did) {
@@ -38,31 +42,23 @@ async function fetchRaceByDid(did) {
       return null;
     }
 
-    const eventDate = parseEventDate(dateStr);
-    if (!eventDate) {
-      await browser.close();
-      return null;
-    }
-
-    // Now, get today's date (UTC, no time)
-    const today = new Date();
-    today.setHours(0,0,0,0);
-
-    // Only return if event is in the future
-    if (eventDate < today) {
-      await browser.close();
-      return null;
-    }
-
-    // Collect desired data according to instructions.txt
-
-    // Name
+    // Name (h1.event-title)
     const name = $('h1.event-title').text().trim();
 
-    // Location (text content of .address_link)
-    const location = $('a.address_link').text().trim();
-
-    // Date (already got as dateStr)
+    // Location (the text content of .address_link)
+    let location = '';
+    let lat = null;
+    let lng = null;
+    const locationLink = $('a.address_link');
+    if (locationLink.length > 0) {
+      location = locationLink.text().trim();
+      const href = locationLink.attr('href');
+      if (href) {
+        const coords = extractLatLngFromHref(href);
+        lat = coords.lat;
+        lng = coords.lng;
+      }
+    }
 
     // Event banner
     const banner = $('#ContentPlaceHolder1_EventInfoThin1_imgEventBanner').attr('src') || null;
@@ -70,7 +66,7 @@ async function fetchRaceByDid(did) {
     // Event start times
     const startTimes = [];
     $('.widget-wrap ul.link-list li').each((i, el) => {
-      const name = $(el).find('.times_name').text().trim();
+      const name = $(el).find('.times_name, .tsimes_name').text().trim();
       const time = $(el).find('.times_time').text().trim();
       if (name && time) startTimes.push({ name, time });
     });
@@ -78,7 +74,7 @@ async function fetchRaceByDid(did) {
     // Website link
     const website = $('#ContentPlaceHolder1_EventInfoThin1_hlWebsite').attr('href') || null;
 
-    // Carousel images
+    // Carousel images (array of image links from data-src)
     const images = [];
     $('ul#lightSlider li').each((i, el) => {
       const src = $(el).attr('data-src');
@@ -89,6 +85,7 @@ async function fetchRaceByDid(did) {
     const ultrasignup_url = url;
 
     // Events (distances/costs)
+    // Not always present, but let's keep the logic
     const events = [];
     $(".SmallButton").each((index, element) => {
       const buttonPriceContent = $(element).text();
@@ -102,6 +99,8 @@ async function fetchRaceByDid(did) {
       did,
       name,
       location,
+      lat,
+      lng,
       date: dateStr,
       banner,
       website,
@@ -150,7 +149,7 @@ async function scrapeAllFutureRaces() {
       misses += 1;
     }
     did -= 1;
-    await sleep(1000); // polite delay
+    await sleep(700); // polite delay
   }
 
   console.log(`Done. Scraped up to DID ${did + 1}`);
